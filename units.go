@@ -21,6 +21,13 @@ var (
 	nothingToConvert = errors.New("nothing to convert")
 )
 
+var (
+	// Zero
+	zeroValue = &measure{
+		unit: &pUnit{},
+	}
+)
+
 // Base Dimensions
 const (
 	currentDim      = iota // I: Electric current
@@ -148,10 +155,10 @@ func (a *measure) MeasurementUnit() string {
 func Reciprocal(mm Measurement) (Measurement, error) {
 	m, err := parse(mm)
 	if err != nil {
-		return nil, err
+		return zeroValue, err
 	}
 	if m.Value == 0.0 {
-		return nil, divideByZero
+		return zeroValue, divideByZero
 	}
 	m.Value = 1.0 / m.Value
 	m.unit = m.unit.Reciprocal()
@@ -170,7 +177,7 @@ func Reciprocal(mm Measurement) (Measurement, error) {
 func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, error) {
 	m, err := parse(m0)
 	if err != nil {
-		return nil, err
+		return zeroValue, err
 	}
 
 	unit := m.unit
@@ -178,7 +185,7 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 	for _, mm := range ms {
 		m, err := parse(mm)
 		if err != nil {
-			return nil, err
+			return zeroValue, err
 		}
 
 		value = value * m.Value
@@ -187,21 +194,21 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 
 	targetM, err := Parse(0.0, unitString)
 	if err != nil {
-		return nil, err
+		return zeroValue, err
 	}
 	target := targetM.(*measure)
 
 	if target.unit.product() != unit.product() {
-		return nil, wrongDimension
+		return zeroValue, wrongDimension
 	}
 
 	scaleDiff := unit.Scale - target.unit.Scale
 	value *= math.Pow10(scaleDiff)
 	if value == 0.0 {
-		return nil, underflow
+		return zeroValue, underflow
 	}
 	if math.IsInf(value, 0) {
-		return nil, overflow
+		return zeroValue, overflow
 	}
 
 	return &measure{

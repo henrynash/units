@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	theZero        = &pUnit{}
 	symbolNotFound = errors.New("symbol not found")
 	prefixNotFound = errors.New("prefix not found")
 	unparsedText   = errors.New("unparsed text")
@@ -67,18 +66,16 @@ func Parse(quantity float64, unitString string) (Measurement, error) {
 	data := []byte(unitString)
 
 	if len(data) == 0 {
-		return &measure{
-			unit: theZero,
-		}, nil
+		return zeroValue, nil
 	}
 
 	unit, pos, err := parseUnit(data, 0)
 	if err != nil {
-		return nil, makeParseError(data, pos, err)
+		return zeroValue, makeParseError(data, pos, err)
 	}
 	pos, _ = scanToNonSpace(data, pos, false)
 	if pos != len(data) {
-		return nil, makeParseError(data, pos, unparsedText)
+		return zeroValue, makeParseError(data, pos, unparsedText)
 	}
 
 	return &measure{
