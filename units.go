@@ -1,8 +1,9 @@
-// Package unit provides dimensional analysis and conversions
-package unit
+// Package units provides dimensional analysis and conversions
+package units
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -12,7 +13,12 @@ const (
 )
 
 var (
-	tbd = errors.New("tbd")
+	tbd              = errors.New("tbd")
+	divideByZero     = errors.New("divide by zero")
+	wrongDimension   = errors.New("wrong dimension")
+	underflow        = errors.New("underflow")
+	overflow         = errors.New("overflow")
+	nothingToConvert = errors.New("nothing to convert")
 )
 
 // Base Dimensions
@@ -97,7 +103,7 @@ func (a *pUnit) Multiply(b *pUnit) *pUnit {
 	}
 }
 
-func (a *pUnit) Inverse() *pUnit {
+func (a *pUnit) Reciprocal() *pUnit {
 	r := a.product()
 	for idx, v := range r {
 		r[idx] = -v
@@ -136,44 +142,73 @@ func (a *measure) MeasurementUnit() string {
 	return a.Unit
 }
 
-// Returns the inverse of a measurement. E.g., Inverse(2 m/s) = 1/2 s/m
-func Inverse(mm Measurement) (Measurement, error) {
+// Returns the reciprocal of a measurement. E.g., Reciprocal(2 m/s) = 1/2 s/m.
+// The unit of the reciprocal is implementation dependent; use New to convert
+// it to a specific unit of measure.
+func Reciprocal(mm Measurement) (Measurement, error) {
 	m, err := parse(mm)
 	if err != nil {
 		return nil, err
 	}
-	return m, tbd
-}
-
-// Rescale measurement to target unit scale.
-//
-// If the quantity would be too large to represent in the target scale, return
-// an overflow error. Ignore underflows when a quantity is too small to
-// represent in the target scale. It is the responsibility of the caller to
-// provide a unit that preserves the desired precision.
-func ScaleTo(unit string, m Measurement) (Measurement, error) {
-	return nil, tbd
-}
-
-// Convert measurement by applying factor. Rescale measurement m and factor to
-// target unit scale.
-//
-// If either quantity would be too large to represent in the target scale,
-// return an overflow error. Ignore underflows when a quantity is too small to
-// represent in the target scale. It is the responsibility of the caller to
-// provide a unit that preserves the desired precision.
-func ConvertTo(unitString string, m, factor Measurement) (Measurement, error) {
-	return nil, tbd
+	if m.Value == 0.0 {
+		return nil, divideByZero
+	}
+	m.Value = 1.0 / m.Value
+	m.unit = m.unit.Reciprocal()
+	if len(m.Unit) != 0 {
+		// TODO: canonicalize?
+		m.Unit = "(" + m.Unit + ")^-1"
+	}
+	return m, nil
 }
 
 // Convert one measurement to another dimension or scale by applying conversion
 // factors.
 //
 // The units for intermediate terms is unspecified and may change. If either an
-// overflow or underflow occurs, an error will be returned. For more control
-// over conversions consider using ConvertTo() and ScaleTo().
-func New(unitString string, ms ...Measurement) (Measurement, error) {
-	return nil, tbd
+// overflow or underflow occurs, an error will be returned.
+func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, error) {
+	m, err := parse(m0)
+	if err != nil {
+		return nil, err
+	}
+
+	unit := m.unit
+	value := m.Value
+	for _, mm := range ms {
+		m, err := parse(mm)
+		if err != nil {
+			return nil, err
+		}
+
+		value = value * m.Value
+		unit = unit.Multiply(m.unit)
+	}
+
+	targetM, err := Parse(0.0, unitString)
+	if err != nil {
+		return nil, err
+	}
+	target := targetM.(*measure)
+
+	if target.unit.product() != unit.product() {
+		return nil, wrongDimension
+	}
+
+	scaleDiff := unit.Scale - target.unit.Scale
+	value *= math.Pow10(scaleDiff)
+	if value == 0.0 {
+		return nil, underflow
+	}
+	if math.IsInf(value, 0) {
+		return nil, overflow
+	}
+
+	return &measure{
+		Value: value,
+		Unit:  unitString,
+		unit:  unit,
+	}, nil
 }
 
 // Convenience function that panics if measurement operation fails.
