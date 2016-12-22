@@ -125,7 +125,7 @@ func parseUnit(data []byte, pos int) (*pUnit, int, error) {
 		if err != nil {
 			return nil, pos, err
 		}
-		unit = unit.Multiply(nextUnit.Inverse())
+		unit = unit.Multiply(nextUnit.Reciprocal())
 	} else if pos, err = parseRune(data, pos, '·'); err == nil {
 		// ... |  Unit · Unit
 		nextUnit, pos, err = parseUnit(data, pos)
