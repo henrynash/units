@@ -1,4 +1,4 @@
-package unit
+package units
 
 import "testing"
 
@@ -70,19 +70,19 @@ func TestParseDimensions(t *testing.T) {
 		},
 		testCase{
 			Unit:     "kmol / s",
-			Expected: um["mol"].Multiply(um["s"].Inverse()).product(),
+			Expected: um["mol"].Multiply(um["s"].Reciprocal()).product(),
 		},
 		testCase{
 			Unit:     "g/L",
-			Expected: um["g"].Multiply(um["L"].Inverse()).product(),
+			Expected: um["g"].Multiply(um["L"].Reciprocal()).product(),
 		},
 		testCase{
 			Unit:     "ug/uL",
-			Expected: um["g"].Multiply(um["L"].Inverse()).product(),
+			Expected: um["g"].Multiply(um["L"].Reciprocal()).product(),
 		},
 		testCase{
 			Unit:     "s^-1",
-			Expected: um["s"].Inverse().product(),
+			Expected: um["s"].Reciprocal().product(),
 		},
 		testCase{
 			Unit:     "kg·m/s^2",
@@ -94,7 +94,7 @@ func TestParseDimensions(t *testing.T) {
 		},
 		testCase{
 			Unit:     "(kg·m/(s^2 s))^-1",
-			Expected: um["N"].Multiply(um["Hz"]).Inverse().product(),
+			Expected: um["N"].Multiply(um["Hz"]).Reciprocal().product(),
 		},
 		testCase{
 			Unit:     "N/m^2",

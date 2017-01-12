@@ -1,4 +1,4 @@
-package unit
+package units
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 )
 
 var (
-	theZero        = &pUnit{}
 	symbolNotFound = errors.New("symbol not found")
 	prefixNotFound = errors.New("prefix not found")
 	unparsedText   = errors.New("unparsed text")
@@ -67,18 +66,16 @@ func Parse(quantity float64, unitString string) (Measurement, error) {
 	data := []byte(unitString)
 
 	if len(data) == 0 {
-		return &measure{
-			unit: theZero,
-		}, nil
+		return zeroValue, nil
 	}
 
 	unit, pos, err := parseUnit(data, 0)
 	if err != nil {
-		return nil, makeParseError(data, pos, err)
+		return zeroValue, makeParseError(data, pos, err)
 	}
 	pos, _ = scanToNonSpace(data, pos, false)
 	if pos != len(data) {
-		return nil, makeParseError(data, pos, unparsedText)
+		return zeroValue, makeParseError(data, pos, unparsedText)
 	}
 
 	return &measure{
@@ -125,7 +122,7 @@ func parseUnit(data []byte, pos int) (*pUnit, int, error) {
 		if err != nil {
 			return nil, pos, err
 		}
-		unit = unit.Multiply(nextUnit.Inverse())
+		unit = unit.Multiply(nextUnit.Reciprocal())
 	} else if pos, err = parseRune(data, pos, '·'); err == nil {
 		// ... |  Unit · Unit
 		nextUnit, pos, err = parseUnit(data, pos)

@@ -1,10 +1,10 @@
 apiversion: v2
 kind: package
-name: github.com/antha-lang/unit
+name: github.com/antha-lang/units
 version: 0.0.1
 build:
 modules:
   golang:
-    buildpackage: github.com/antha-lang/unit
+    buildpackage: github.com/antha-lang/units
     testpackages:
     - ~vendor
