@@ -9,7 +9,9 @@ import (
 import "github.com/antha-lang/units"
 
 func main() {
-	js.Global.Set("github.com/antha-lang/units", js.MakeWrapper(&ulib{}))
+	js.Global.Set("Antha", map[string]interface{}{
+		"units": js.MakeWrapper(&ulib{}),
+	})
 }
 
 type ulib struct{}

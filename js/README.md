@@ -1,7 +1,7 @@
 # 
 
 `js
-let units = window["github.com/antha-lang/units"];
+let units = window.Antha.units;
 
 {
   let r = units.Parse(1, "ml");
