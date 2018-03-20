@@ -188,7 +188,7 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 			return zeroValue, err
 		}
 
-		value = value * m.Value
+		value *= m.Value
 		unit = unit.Multiply(m.unit)
 	}
 
@@ -200,6 +200,16 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 
 	if target.unit.product() != unit.product() {
 		return zeroValue, wrongDimension
+	}
+
+	// Special case: allow us to create zero values if there were no
+	// conversions
+	if value == 0.0 && len(ms) == 0 {
+		return &measure{
+			Value: value,
+			Unit:  unitString,
+			unit:  unit,
+		}, nil
 	}
 
 	scaleDiff := unit.Scale - target.unit.Scale
