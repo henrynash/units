@@ -123,8 +123,7 @@ func TestParseDimensions(t *testing.T) {
 			t.Errorf("failed to parse %q: %s", tc.Unit, err)
 		} else if e, f := tc.Expected, m.(*measure).unit.product(); e != f {
 			t.Errorf("failed to parse %q: expected %q found %q", tc.Unit, e, f)
-		} else {
-			//t.Logf("%q is %q\n", tc.Unit, f)
 		}
+		//t.Logf("%q is %q\n", tc.Unit, f)
 	}
 }

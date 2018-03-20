@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	symbolNotFound = errors.New("symbol not found")
-	prefixNotFound = errors.New("prefix not found")
-	unparsedText   = errors.New("unparsed text")
+	errSymbolNotFound = errors.New("symbol not found")
+	errPrefixNotFound = errors.New("prefix not found")
+	errUnparsedText   = errors.New("unparsed text")
 )
 
 // Make a new parser error
@@ -75,7 +75,7 @@ func Parse(quantity float64, unitString string) (Measurement, error) {
 	}
 	pos, _ = scanToNonSpace(data, pos, false)
 	if pos != len(data) {
-		return zeroValue, makeParseError(data, pos, unparsedText)
+		return zeroValue, makeParseError(data, pos, errUnparsedText)
 	}
 
 	return &measure{
@@ -135,13 +135,10 @@ func parseUnit(data []byte, pos int) (*pUnit, int, error) {
 		nextUnit, pos, err = parseUnit(data, pos)
 		if err == nil {
 			unit = unit.Multiply(nextUnit)
-		} else {
-			// Unit parse is done; let caller decide if this is an error
 		}
-	} else {
-		// Unit parse is done; let caller decide if this is an error
 	}
 
+	// Unit parse is done; let caller decide if this is an error
 	return unit, pos, nil
 }
 
@@ -178,7 +175,7 @@ func parseTerm(data []byte, startPos int) (*pUnit, int, error) {
 
 func parsePrefix(data []byte, pos int) (int, int, error) {
 	if len(data) <= pos {
-		return 0, pos, prefixNotFound
+		return 0, pos, errPrefixNotFound
 	}
 
 	str := string(data[pos:])
@@ -189,12 +186,12 @@ func parsePrefix(data []byte, pos int) (int, int, error) {
 		}
 	}
 
-	return 0, pos, prefixNotFound
+	return 0, pos, errPrefixNotFound
 }
 
 func parseSymbol(data []byte, pos int) (*pUnit, int, error) {
 	if len(data) <= pos {
-		return nil, pos, prefixNotFound
+		return nil, pos, errPrefixNotFound
 	}
 
 	str := string(data[pos:])
@@ -204,7 +201,7 @@ func parseSymbol(data []byte, pos int) (*pUnit, int, error) {
 		}
 	}
 
-	return nil, pos, symbolNotFound
+	return nil, pos, errSymbolNotFound
 }
 
 func parseExponent(data []byte, pos int) (uComponent, int, error) {
@@ -242,7 +239,8 @@ func scanToNonSpace(data []byte, pos int, hadSpace bool) (int, bool) {
 // Return position of first non-digit or len(data) if none
 func scanToNonDigit(data []byte, pos int) int {
 	idx := pos
-	for width := 0; idx < len(data); idx += width {
+	var width int
+	for ; idx < len(data); idx += width {
 		v, w := utf8.DecodeRune(data[idx:])
 		width = w
 		if idx == pos && v == '-' {

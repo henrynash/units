@@ -52,11 +52,11 @@ func (a keyedScaleSlice) Swap(i, j int) {
 // Sort longer strings before shorter strings. This ensures that we find the
 // longest match first.
 func longLess(a, b string) bool {
-	if la, lb := len(a), len(b); la == lb {
+	la, lb := len(a), len(b)
+	if la == lb {
 		return a < b
-	} else {
-		return la > lb
 	}
+	return la > lb
 }
 
 func makeScales() ([]keyedScale, error) {

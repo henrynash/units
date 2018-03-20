@@ -68,13 +68,11 @@ func TestScaleOverflow(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		rest = append(rest, big)
 	}
-	m, err := New("yg^7", big, rest...)
-	if err == nil {
+	if m, err := New("yg^7", big, rest...); err == nil {
 		t.Errorf("expecting error got %v", m)
 	}
 
-	m, err = New("yg^6", big, rest[:len(rest)-1]...)
-	if err != nil {
+	if _, err := New("yg^6", big, rest[:len(rest)-1]...); err != nil {
 		t.Error(err)
 	}
 }
@@ -83,32 +81,27 @@ func TestValueOverflow(t *testing.T) {
 	// MaxFloat ~ 1e308
 	// Yg -> yg ~ 1e48
 	// 1e308 / 1e48 = 6.4...
-	m, err := New("g^2", Must(Parse(math.MaxFloat64, "g")), Must(Parse(2.0, "g")))
-	if err == nil {
+	if m, err := New("g^2", Must(Parse(math.MaxFloat64, "g")), Must(Parse(2.0, "g"))); err == nil {
 		t.Errorf("expecting error got %v", m)
 	}
 
-	m, err = New("g", Must(Parse(math.MaxFloat64, "g^2")), Must(Reciprocal(Must(Parse(2.0, "g")))))
-	if err != nil {
+	if _, err := New("g", Must(Parse(math.MaxFloat64, "g^2")), Must(Reciprocal(Must(Parse(2.0, "g"))))); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestValueUnderflow(t *testing.T) {
-	m, err := New("g", Must(Parse(math.SmallestNonzeroFloat64, "g^2")), Must(Reciprocal(Must(Parse(2.0, "g")))))
-	if err == nil {
+	if m, err := New("g", Must(Parse(math.SmallestNonzeroFloat64, "g^2")), Must(Reciprocal(Must(Parse(2.0, "g"))))); err == nil {
 		t.Errorf("expecting error got %v", m)
 	}
 
 	// da = 10^1
-	m, err = New("dag", Must(Parse(math.SmallestNonzeroFloat64, "g")))
-	if err == nil {
+	if m, err := New("dag", Must(Parse(math.SmallestNonzeroFloat64, "g"))); err == nil {
 		t.Errorf("expecting error got %v", m)
 	}
 
 	// d = 10^-1
-	m, err = New("dg", Must(Parse(math.SmallestNonzeroFloat64, "g")))
-	if err != nil {
+	if _, err := New("dg", Must(Parse(math.SmallestNonzeroFloat64, "g"))); err != nil {
 		t.Error(err)
 	}
 }

@@ -9,16 +9,15 @@ import (
 )
 
 const (
+	// ZeroCelsiusInKelvin is the temperature of 0C in Kelvin
 	ZeroCelsiusInKelvin = 273.15 // 0 °C in K
 )
 
 var (
-	tbd              = errors.New("tbd")
-	divideByZero     = errors.New("divide by zero")
-	wrongDimension   = errors.New("wrong dimension")
-	underflow        = errors.New("underflow")
-	overflow         = errors.New("overflow")
-	nothingToConvert = errors.New("nothing to convert")
+	errDivideByZero   = errors.New("divide by zero")
+	errWrongDimension = errors.New("wrong dimension")
+	errUnderflow      = errors.New("underflow")
+	errOverflow       = errors.New("overflow")
 )
 
 var (
@@ -69,6 +68,7 @@ func (a uPoint) String() string {
 	return strings.Join(terms, " ")
 }
 
+// A Measurement is a value with dimensional unit
 type Measurement interface {
 	Quantity() float64
 	MeasurementUnit() string
@@ -149,16 +149,16 @@ func (a *measure) MeasurementUnit() string {
 	return a.Unit
 }
 
-// Returns the reciprocal of a measurement. E.g., Reciprocal(2 m/s) = 1/2 s/m.
-// The unit of the reciprocal is implementation dependent; use New to convert
-// it to a specific unit of measure.
+// Reciprocal returns the reciprocal of a measurement. E.g., Reciprocal(2 m/s)
+// = 1/2 s/m.  The unit of the reciprocal is implementation dependent; use New
+// to convert it to a specific unit of measure.
 func Reciprocal(mm Measurement) (Measurement, error) {
 	m, err := parse(mm)
 	if err != nil {
 		return zeroValue, err
 	}
 	if m.Value == 0.0 {
-		return zeroValue, divideByZero
+		return zeroValue, errDivideByZero
 	}
 	m.Value = 1.0 / m.Value
 	m.unit = m.unit.Reciprocal()
@@ -169,8 +169,8 @@ func Reciprocal(mm Measurement) (Measurement, error) {
 	return m, nil
 }
 
-// Convert one measurement to another dimension or scale by applying conversion
-// factors.
+// New converts one measurement to another dimension or scale by applying
+// conversion factors.
 //
 // The units for intermediate terms is unspecified and may change. If either an
 // overflow or underflow occurs, an error will be returned.
@@ -199,7 +199,7 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 	target := targetM.(*measure)
 
 	if target.unit.product() != unit.product() {
-		return zeroValue, wrongDimension
+		return zeroValue, errWrongDimension
 	}
 
 	// Special case: allow us to create zero values if there were no
@@ -215,10 +215,10 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 	scaleDiff := unit.Scale - target.unit.Scale
 	value *= math.Pow10(scaleDiff)
 	if value == 0.0 {
-		return zeroValue, underflow
+		return zeroValue, errUnderflow
 	}
 	if math.IsInf(value, 0) {
-		return zeroValue, overflow
+		return zeroValue, errOverflow
 	}
 
 	return &measure{
@@ -228,7 +228,7 @@ func New(unitString string, m0 Measurement, ms ...Measurement) (Measurement, err
 	}, nil
 }
 
-// Convenience function that panics if measurement operation fails.
+// Must is a convenience function that panics if measurement operation fails.
 func Must(m Measurement, err error) Measurement {
 	if err != nil {
 		panic(err)
